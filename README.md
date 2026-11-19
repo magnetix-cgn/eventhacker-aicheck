@@ -25,6 +25,7 @@ Die Farbgebung folgt dem Eventhacker-Profil (Blau #00AEEF, Schwarz #0B0F14, Grau
 - RFC-Portal: https://rfc.eventhacker.de/
 - RFC-Repository: https://github.com/magnetix-cgn/eventhacker-rfc
 - Vorläufiges Mapping: docs/rfc-mapping.md
+- Stage-2-Deployment-Runbook (Entwurf, nicht ausführen): docs/deployment-runbook.md
 - Designreferenz: https://github.com/magnetix-cgn/natocheck
 
 Die offizielle RFC-Entwicklungsseite beschreibt Branch/Review vor Merge. Sie enthält aktuell keinen verabschiedeten AI-Request-Normtext. Dieses Spiel ist ein **Trainingsentwurf**.
