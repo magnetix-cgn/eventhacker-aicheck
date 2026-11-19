@@ -1,0 +1,16 @@
+name: Testflight smoke tests
+on:
+  push:
+    branches: ["stage2/**", "main"]
+  pull_request:
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm test
