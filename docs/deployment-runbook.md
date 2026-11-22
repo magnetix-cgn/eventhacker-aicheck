@@ -1,101 +1,104 @@
-# Eventhacker AI-Check — Stage-2-Deployment-Runbook (ENTWURF)
+# AI-Check release preparation
 
-**Request ID:** EH-W-AICHECK-DEPLOY-001 · **Issue:** #2 · **Stand:** 2026-11-19  
-**Freigabestatus:** Request pushback / Stage 2 **nur für Vorbereitung**. **Kein Ready for takeoff.**
+Request: EH-W-AICHECK-DEPLOY-001, issue #2, plan revision 2.0.
+Updated: 2026-11-22. State: preparation only; CONTACT TOWER before final release.
 
-Ziel: Für das statische Frontend aus dem [Draft PR #1](https://github.com/magnetix-cgn/eventhacker-aicheck/pull/1) einen nachvollziehbaren, reversiblen Release nach `aicheck.eventhacker.de` vorbereiten. Dieses Dokument ist eine Anleitung **für eine spätere, einzeln freigegebene Durchführung**. Nichts wird durch das Schreiben dieses Dokuments live geschaltet.
+## Baseline and scope
 
-## 1. Tatsächlich geprüfter Stand
+PR #1 merged to main as `1759a6f3666b34391ff331d69b7d36475e25bceb`.
+The previous blanket no-merge statement is obsolete for that PR. This new
+preparation candidate still requires review; do not merge or publish it in this run.
+Prior test-deployment approval is recorded and remains acknowledged.
 
-- Repository: `magnetix-cgn/eventhacker-aicheck`, Entwicklungsbranch `stage2/ai-check-testflight-mvp`.
-- Statisches HTML/CSS/JavaScript in `index.html`; ohne Account, Runtime-API oder Backend.
-- Sechs Missionen, eigene Requests und lokale Punkte in `localStorage`.
-- GitHub Actions mit Node-Smoke-Tests: am 2026-11-19 für SHA `191ccc6f8050bc47444ff58ba55414fb1c5b8465` **erfolgreich** (zwei Runs).
-- Extern geladenes Eventhacker-Logo: `raw.githubusercontent.com/magnetix-cgn/natocheck/main/assets/eventhacker-logo-white.webp`. Dafür wird beim Laden eine Netzwerkverbindung zu GitHub aufgebaut (IP/Browsermetadaten). **Vor Veröffentlichung** gewünschtes Logo und Lizenz/Brand-Freigabe prüfen und dann idealerweise lokal ausliefern.
-- **Blocker:** Der aktuelle JavaScript-Code steht inline in `index.html`. Für eine restriktive Produktions-CSP (`script-src 'self'` ohne `unsafe-inline`) muss er vorab in eine lokale Datei ausgelagert oder mit sicheren Hashes verarbeitet werden. Die Auslagerung ist der bevorzugte Weg.
-- Noch nicht bestätigt: tatsächlicher DNS-Verwalter, Host, Reverse-Proxy-Konfiguration, existierender SSL-Zertifikatsprozess, IPv6, iOS-Safari-Darstellung, Screenreader-Tests.
+The static game needs no backend, runtime API, package installation or new VM.
+JavaScript and CSS are local assets. A text wordmark replaces the external logo
+request pending an approved brand asset supplied through Nextcloud AgentUp.
+No logo was copied, generated or fetched from an unapproved source. The production
+asset must have documented provenance and owner approval before replacement.
 
-## 2. Release-Gates: MUST vor Ready for takeoff
+## Environment evidence and independent blockers
 
-- [ ] Aktuellen Code/PR reviewen, Freigabe für Merge auf `main` **separat** erhalten.
-- [ ] `npm test` im Release-SHA grün, tatsächliche Browser-Smoke-Tests auf Desktop und iOS-Safari durchführen.
-- [ ] Funktionale Tests: alle 6 Beispiele, absichtlich unvollständiger Stage-2-Request, Takeoff-Signal ohne Scope, Abort ohne Stop/Status, eigener Request, Zurücksetzen des lokalen Fortschritts.
-- [ ] Accessibility: Tab-Reihenfolge, sichtbarer Focus, Labels, Screenreader-Ausgabe für Ergebnisse, 200%-Zoom und schmale Viewports prüfen; Kontraste überprüfen.
-- [ ] CSP-Blocker beheben; keine Inline-Skripte/eval, keine unsicheren Dritt-Skripte.
-- [ ] Logo-Abhängigkeit/Datenschutzhinweis prüfen und, wenn rechtlich/technisch möglich, Logo lokal hosten.
-- [ ] RFC-Hinweis korrekt: Der Trainer ist ein **heuristischer Entwurf**, kein RFC-Auditor und keine Freigabeinstanz.
-- [ ] DNS- und HTTPS-Ziel, Betreiber, Host-Zugriff, Backups und Rollback-Pfad festlegen.
-- [ ] Sicherheits- und Datenschutzprüfung (Logs, Aufbewahrung, externe Requests, CSP/Permissions Policy).
-- [ ] Freigabe mit explizitem `Ready for takeoff` inklusive **Release-SHA, Ziel-FQDN und genauem Scope** dokumentieren.
+Read-only discovery through hosting_hetzner on 2026-11-22 established:
 
-## 3. Hosting-Optionen (Entscheidung offen)
+- The configured Hetzner token can read the eventhacker.de zone (status ok).
+- Its cloud project returns an empty server list. This does not prove that other
+  projects or non-cloud hosting have no servers.
+- The local resolver returns NXDOMAIN for aicheck.eventhacker.de A and AAAA.
+- The existing ai alias is reachable, but its Apache configuration cannot be
+  fully inspected by the current account. No AI-Check directory/vHost was found
+  in the inspected paths. It is not a confirmed destination for this application.
+- The htki.de fallback address is only a rules-retrieval route, never a hosting
+  assignment for AI-Check.
 
-**Option A — statische Dateien auf bestehendem Eventhacker-Webserver:** minimaler zusätzlicher Stack; eigener isolierter vHost/DocumentRoot. Bevorzugt, **falls** vorhandene Infrastruktur/Verantwortlichkeiten und ein isolierter Release-Pfad dafür geeignet sind.
+Exact server/project, authorized deployment account, isolated Apache vHost and
+DocumentRoot, release root, lock/log ownership, backup owner, TLS provisioning,
+DNS records and a reviewed activation procedure remain unconfirmed. Do not
+invent paths or create infrastructure to fill these gaps. No target executable
+activation script is installed or claimed tested until this route is confirmed.
+The required xvxv-env/bin/python is absent; no Python command was used.
 
-**Option B — separate kleine statische Hosting-Instanz:** bessere Trennung von der Eventhacker-Website; zusätzlicher DNS-/TLS-/Betriebsaufwand.
+## Candidate validation and immutable bundle
 
-Vorentscheidung: keine neue VM nur für die statische Vorschau ohne belastbaren Grund. Zuerst bestehende Infrastruktur und deren Zuständigkeiten dokumentieren. Kein öffentlicher Status oder reale Host-Daten in Git.
+Use the existing checkout and current branch; preserve unrelated work.
 
-## 4. Beispiel: vHost-Konzept, NICHT anwenden
-
-Das folgende Nginx-Beispiel ist **nicht** produktionsfertig, solange CSP/Logo-Blocker ungelöst sind. Pfade und Zertifikatsverwaltung sind Platzhalter. Die tatsächliche Konfiguration ist durch das betreibende Team zu reviewen.
-
-```nginx
-server {
-    listen 443 ssl http2;
-    server_name aicheck.eventhacker.de;
-
-    root /srv/eventhacker-aicheck/current;
-    index index.html;
-    autoindex off;
-
-    # SSL-Zertifikate/ACME nach lokalem Betriebsstandard eintragen.
-    # ssl_certificate     /etc/...;
-    # ssl_certificate_key /etc/...;
-
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
-    add_header X-Frame-Options "DENY" always;
-    add_header Permissions-Policy "camera=(), microphone=(), geolocation=()" always;
-    # Zielkonfiguration nach Auslagerung des Inline-JS und Hosting des Logos:
-    add_header Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'" always;
-
-    location / {
-        try_files $uri $uri/ =404;
-        add_header Cache-Control "no-store" always;
-    }
-}
+```sh
+node --check assets/app.js
+npm test
+node scripts/prepare-release.cjs FULL_COMMITTED_HEAD_SHA NEW_EXTERNAL_OUTPUT_DIRECTORY
 ```
 
-**Vor Anwendung ergänzen:** HSTS nur nach Verifikation der HTTPS-Abdeckung; eindeutige Regelung für IPv4/IPv6, HTTP→HTTPS, TLS, Logs, Monitoring und CDN/Proxies. Beim Nginx-Beispiel beachten, dass `add_header`-Anweisungen in einem `location`-Block die Vererbung anderer Header beeinflussen können. Die Release-Konfiguration sollte die Security-Header konsistent im passenden gemeinsamen Kontext definieren und anschließend mit tatsächlichen HTTP-Antworten geprüft werden. Derzeit keine Empfehlung zur Übernahme dieses Snippets ohne Review.
+The build-only command rejects a dirty checkout, a SHA other than HEAD, existing
+output, and non-regular assets. It exports exactly index.html, assets/app.js,
+assets/app.css, assets/icon.svg and .htaccess from Git into release.tar, with per-file SHA-256
+and archive checksum in manifest.json. It neither connects to a server nor
+changes DNS, services or permissions. Keep its output outside Git. Re-run tests
+on the exact committed candidate before presenting its SHA to Tower.
 
-## 5. Release-Plan nach separater Freigabe
+The Apache .htaccess declares a restrictive CSP with no unsafe-inline/eval and
+connect-src none, plus security headers and no-store. The host must permit the
+relevant overrides, load mod_headers and enable the Options directive. The
+IfModule guard is not proof headers are active: missing headers are a failed
+release verification, never an acceptable downgrade.
 
-1. Genehmigten und getesteten Git-Commit/Tag unveränderlich festhalten (`RELEASE_SHA`).
-2. Einen nur lesbaren Release-Ordner `/srv/eventhacker-aicheck/releases/<sha>/` mit genau den freigegebenen statischen Assets vorbereiten. Keine `.git`-, Test- oder internen Dateien öffentlich ausliefern.
-3. Vorhandene Live-Version (`previous`) und bestehende Konfiguration sichern; atomaren Symlinkwechsel auf `current` vorbereiten.
-4. DNS/AAAA, Zertifikat, vHost und Header **nur im explizit freigegebenen Scope** konfigurieren.
-5. Konfiguration testen (`nginx -t` o.ä.), kontrolliertes Reload, dann Smoke-Test gegen den tatsächlichen HTTPS-Host.
-6. Verifizieren: Startseite HTTP 200, korrekter Titel/Logo, sechs Missionen, Free-Request, keine Browser-Console-/CSP-Fehler, keine Drittanbieter-Skripte, keine unerwarteten Requests, korrekte Caching-Header, Zertifikatskette und Redirect.
-7. Ergebnisprotokoll mit Release-SHA, Zeit, Testergebnis und verantwortlicher Person in Issue #2 dokumentieren.
+## Route to approve after hosting confirmation
 
-Diese Schritte beschreiben die **spätere** Durchführung, keine jetzt ausgeführte Aktion.
+1. Review candidate SHA/PR, tests, brand fallback and remaining acceptance checks.
+2. Record exact hostname, server/project, deployment identity, isolated release
+   root, DocumentRoot/current mapping, lock and audit-log path, backup ownership,
+   TLS process and DNS values using hosting_hetzner. Capture existing DNS and
+   deployment state before any approved mutation.
+3. Prepare a repository-owned deployment command for those verified inputs.
+   Require a clean checkout at the approved SHA, remote release identity check,
+   exclusive server lock, checksum verification and a new immutable versioned
+   asset directory. Expose no repository, tests, manifests or secrets publicly.
+4. Record the previous current target. Activate only the approved release by
+   an atomic current switch. Validate Apache configuration before any necessary
+   controlled reload. Keep CI deployment manual; never edit target source code.
+5. Verify HTTPS status, hostname/certificate, CSP and all security headers,
+   exact JS/CSS content hashes, six mission examples, negative clearance cases,
+   free request, local persistence/reset, mobile layout and keyboard behavior.
+   Block unexpected third-party asset requests or console/CSP errors.
+6. Record release SHA, checksums, timestamp and actual results in issue #2.
+   Contact Tower with evidence and final decision request; do not label landed
+   before acceptance is verified.
 
-## 6. Rollback
+## Rollback to rehearse on the confirmed target
 
-Bei Regression, TLS-/CSP-Fehler oder unerwarteten Netzwerkanfragen: Traffic nicht weiter umstellen. Vorherigen `current`-Symlink auf die protokollierte, bekannte Release-Version zurücksetzen; Webserverkonfiguration prüfen und kontrolliert reloaden. Wenn DNS geändert wurde, TTL und DNS-Rücknahme separat beachten. Incident/Fehler mit Befunden dokumentieren und keine automatische erneute Freigabe annehmen. Für initiales Deployment ohne Vorgängerversion: neuen vHost deaktivieren und zur vorherigen DNS-/Proxy-Konfiguration zurückkehren.
+Under the same server lock, restore only the recorded previous current symlink
+atomically, check Apache config if changed, and repeat external HTTPS/content
+verification. Retain both release directories and audit records. On an initial
+release with no previous target, use the reviewed initial-disable procedure;
+do not invent a previous release or delete unrelated content. DNS rollback is
+separate and must restore the captured RRSet values under the approved scope.
 
-## 7. Testprotokoll / Offene Punkte
+This sequence is reviewable but cannot be executed or called host-tested until
+the exact target and procedure are established. CONTACT TOWER with this blocker.
 
-| Bereich | Stand |
-| --- | --- |
-| GitHub CI auf Stage-2-Branch | ✓ Zwei erfolgreiche Runs, SHA s.o. |
-| Interaktive Browser-Smokes / iOS Safari | Offen |
-| WCAG / Screenreader | Offen |
-| Inline-Script / strenge CSP | **Blocker** |
-| Logo lokal / Drittanbieter-Request | **Zu prüfen** |
-| DNS / TLS / Hosting-Betrieb | Nicht eingerichtet / nicht hier geprüft |
-| Merge nach main | Nicht freigegeben |
-| Produktiv-Deployment | **Nicht freigegeben** |
+## Acceptance ledger
 
-**Flightstatus:** *Pushback granted, holding short.* Keine Änderungen an Produktion.
+- Node functional smoke tests: run against the candidate and record exact SHA.
+- Strict CSP desktop/mobile Chromium: record actual local-browser evidence.
+- Physical iOS/Safari: NOT TESTED.
+- Screenreader: NOT TESTED.
+- Hosted Apache header/TLS/rollback verification: BLOCKED, target unconfirmed.
+- Production deployment and external publication: NOT PERFORMED.
