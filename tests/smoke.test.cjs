@@ -6,8 +6,8 @@ const vm=require("node:vm");
 
 function start(){
  const html=fs.readFileSync(path.join(__dirname,"..","index.html"),"utf8");
- const match=html.match(/<script>([\s\S]*?)<\/script>/);
- assert.ok(match,"inline game script present");
+ assert.match(html, /<script src="assets\/app\.js" defer><\/script>/);
+ const script=fs.readFileSync(path.join(__dirname,"..","assets","app.js"),"utf8");
  class Element{
   constructor(tag){this.tag=tag;this.value="";this.textContent="";this.hidden=false;this.children=[];this.handlers={};this.style={};this.attrs={};this.classList={toggle:()=>{}};}
   append(...items){this.children.push(...items);}
@@ -20,7 +20,7 @@ function start(){
  const els={},storage={};
  const document={getElementById:id=>els[id]||(els[id]=new Element(id)),createElement:tag=>new Element(tag)};
  const localStorage={getItem:key=>storage[key]||null,setItem:(key,val)=>{storage[key]=val;},removeItem:key=>{delete storage[key];}};
- vm.runInNewContext(match[1],{document,localStorage,confirm:()=>true});
+ vm.runInNewContext(script,{document,localStorage,confirm:()=>true});
  function click(id){assert.ok(els[id].handlers.click,id+" click handler");els[id].handlers.click();}
  function resultTitle(id){const h=els[id].children.find(c=>c.tag==="h3");return h&&h.textContent;}
  function switchTo(id){els.select.value=id;els.select.handlers.change({target:els.select});}
